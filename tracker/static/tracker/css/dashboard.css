@@ -1,0 +1,54 @@
+.container {
+    max-width: 90%;
+    padding-left: 10px !important; 
+    padding-right: 10px !important;
+}
+
+/* Category Links */
+.category-container {
+    padding-bottom: 10px;
+}
+
+.category-link {
+    text-decoration: none;
+    font-size: 15px;
+    color: #555;
+    font-weight: 500;
+    position: relative;
+    padding-bottom: 5px;
+}
+
+.category-link.active {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.category-link.active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    width: 60%;
+    height: 2px;
+    background-color: #007bff;
+    transform: translateX(-50%);
+}
+
+/* Ensure horizontal scrolling for smaller screens */
+.table-responsive {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* Cards Styling */
+.card {
+    border-radius: 12px;
+}
+
+
+.chart-canvas {
+    max-width: 350px;
+    max-height: 350px;
+    margin: auto;
+    display: block;
+}

@@ -1,0 +1,69 @@
+{% extends "tracker/base.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'tracker/css/dashboard.css' %}">
+
+<div class="mt-4">
+    <div class="card shadow-sm border-0 p-3 rounded-4">
+        
+        <!-- Horizontal Category Filter -->
+        <div class="d-flex flex-wrap gap-4 justify-content-start position-relative category-container p-3">
+            <a href="#" class="category-link {% if selected_category == 'All' %}active{% endif %}" data-category="All">
+                All Expenses
+            </a>
+            {% for category in category_summary %}
+                <a href="#" class="category-link {% if selected_category == category.category %}active{% endif %}" 
+                data-category="{{ category.category }}">
+                    {{ category.category }} (₹{{ category.total }})
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- Expense Table -->
+        <div class="table-responsive p-2">
+            <table id="expense-table" class="table table-striped">
+                <thead>
+                    <tr class="table-dark text-center">
+                        <th>Title</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.title }}</td>
+                            <td>₹{{ expense.amount }}</td>
+                            <td>{{ expense.category }}</td>
+                            <td>{{ expense.date }}</td>
+                            <td>
+                                <a href="{% url 'edit_expense' expense.id %}" class="text-warning">
+                                    <i class="fa-solid fa-pen-to-square"></i> <!-- Edit Icon -->
+                                </a>
+                                &nbsp; <!-- Space between icons -->
+                                <a href="{% url 'delete_expense' expense.id %}" 
+                                   class="text-danger"
+                                   onclick="return confirm('Are you sure you want to delete this expense?');">
+                                    <i class="fa-solid fa-trash"></i> <!-- Red Trash Bin Icon -->
+                                </a>
+                            </td>
+                            
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-center">No expenses found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+<script src="{% static 'tracker/js/expense-filter.js' %}"></script>
+<script src="{% static 'tracker/js/expense-chart.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <!-- Keep external library links -->
+
+{% endblock %}

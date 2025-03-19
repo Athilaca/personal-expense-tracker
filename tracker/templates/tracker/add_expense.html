@@ -1,0 +1,33 @@
+{% extends "tracker/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center mt-5">
+    <div class="col-md-5">  <!-- Reduced width -->
+        <div class="card shadow-lg p-4 rounded-4 bg-white" >
+            <!-- Dynamic Heading -->
+            <h2 class="text-center mb-3 fw-bold text-primary fs-5">  <!-- Bootstrap `fs-5` reduces font size -->
+                {% if expense %} ✏️ Edit Expense {% else %} ➕ Add Expense {% endif %}
+            </h2>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="fs-6">  <!-- Bootstrap `fs-6` for smaller form text -->
+                    {{ form|crispy }}
+                </div>
+                
+                <!-- Dynamic Button -->
+                <button type="submit" class="btn {% if expense %}btn-warning{% else %}btn-success{% endif %} w-100 mt-2 fw-semibold fs-6">
+                    {% if expense %} Update Expense {% else %} Add Expense {% endif %}
+                </button>
+            </form>
+            
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-100 mt-2 fw-semibold fs-6">⬅️ Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

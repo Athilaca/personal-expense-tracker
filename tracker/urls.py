@@ -12,4 +12,6 @@ urlpatterns = [
     path('delete/<int:pk>/', views.delete_expense, name='delete_expense'),
     path('logout/',views.custom_logout, name='logout'),
     path("filter_expenses/", views.filter_expenses, name="filter_expenses"),
+    path('export_expenses/', views.export_expenses, name='export_expenses'),
+    path('expenses/', views.expenses, name='expenses'),
 ]

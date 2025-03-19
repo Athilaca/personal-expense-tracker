@@ -9,6 +9,10 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .forms import LoginForm  
+import csv
+import pandas as pd
+from django.http import HttpResponse
+from django.db.models.functions import TruncMonth
 # from django.contrib.auth.views import LoginView
 
 
@@ -25,7 +29,7 @@ def register(request):
             return redirect("dashboard")
     else:
         form = SignupForm()
-    return render(request, "register.html", {"form": form})
+    return render(request, "tracker/register.html", {"form": form})
 
 def custom_login(request):
     if request.user.is_authenticated:
@@ -46,7 +50,7 @@ def custom_login(request):
     else:
         form = LoginForm()
 
-    return render(request, "login.html", {"form": form})
+    return render(request, "tracker/login.html", {"form": form})
 
 @login_required
 def dashboard(request):
@@ -70,7 +74,7 @@ def dashboard(request):
 
     return render(
         request,
-        "dashboard.html",
+        "tracker/dashboard.html",
         {
             "expenses": expenses,  # Only filtered expenses for table
             "total_expenses": total_expenses,  # Always sum of all expenses
@@ -100,7 +104,7 @@ def add_edit_expense(request, pk=None):
 
     return render(
         request,
-        "add_expense.html",
+        "tracker/add_expense.html",
         {"form": form, "expense": expense},
     )
 
@@ -119,15 +123,63 @@ def filter_expenses(request):
     if category != "All":
         expenses = expenses.filter(category=category)
 
+     # Group expenses by month
+    monthly_expenses = (
+        expenses.annotate(month=TruncMonth("date"))
+        .values("month")
+        .annotate(total=Sum("amount"))
+        .order_by("month")
+    )
+
+    months = [item["month"].strftime("%b %Y") for item in monthly_expenses]  # Format: "Jan 2024"
+    month_totals = [item["total"] for item in monthly_expenses]
+    
+
     expenses_data = list(expenses.values("id", "title", "amount", "category", "date"))
     category_summary = expenses.values("category").annotate(total=Sum("amount"))
     categories = [item["category"] for item in category_summary]
     totals = [item["total"] for item in category_summary]
 
     return JsonResponse({"expenses": expenses_data,"categories": categories,
-            "totals": totals,})
+            "totals": totals, "months": months,
+        "month_totals": month_totals})
+
+
+
+def export_expenses(request):
+    format_type = request.GET.get("format", "csv")
+
+    # Get all expenses for the logged-in user
+    expenses = Expense.objects.filter(user=request.user).values("title", "amount", "category", "date")
+
+    # Calculate total expenses
+    total_expenses = sum(expense["amount"] for expense in expenses)
+
+    if format_type == "excel":
+        df = pd.DataFrame(expenses)
+        df.loc[len(df)] = ["Total", total_expenses, "All Categories", ""]  # Add Total Row
+        response = HttpResponse(content_type="application/vnd.ms-excel")
+        response["Content-Disposition"] = 'attachment; filename="expenses.xlsx"'
+        df.to_excel(response, index=False)
+        return response
+
+    # Default to CSV
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="expenses.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["Title", "Amount", "Category", "Date"])
+    for expense in expenses:
+        writer.writerow([expense["title"], expense["amount"], expense["category"], expense["date"]])
+    writer.writerow(["Total", total_expenses])  # Add Total Row
+    return response
 
 
 def custom_logout(request):
     logout(request)
     return redirect('login')
+
+
+def expenses(request):
+    expenses = Expense.objects.filter(user=request.user)  # Filter by logged-in user
+    category_summary = expenses.values("category").annotate(total=Sum("amount"))
+    return render(request, "tracker/expense.html", {"expenses": expenses, "category_summary": category_summary,})
