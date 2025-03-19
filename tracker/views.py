@@ -173,12 +173,12 @@ def export_expenses(request):
     writer.writerow(["Total", total_expenses])  # Add Total Row
     return response
 
-
+@login_required
 def custom_logout(request):
     logout(request)
     return redirect('login')
 
-
+@login_required
 def expenses(request):
     expenses = Expense.objects.filter(user=request.user)  # Filter by logged-in user
     category_summary = expenses.values("category").annotate(total=Sum("amount"))
