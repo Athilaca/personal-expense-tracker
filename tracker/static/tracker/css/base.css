@@ -8,9 +8,16 @@
 
 /* Navbar Styling */
 .navbar {
-    background: rgba(248, 243, 243, 0.938) !important;
-    padding: 20px 0;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    background: #f8f9fa !important;  /* Light gray for a soft look */
+    color: #2a2a72 !important;  /* Dark blue text for contrast */
+    padding: 15px 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    position: fixed;
+    top: 0;
+    left: 250px;
+    width: calc(100% - 250px);
+    z-index: 1000;
+    transition: left 0.3s ease-in-out;
 }
 
 /* Navbar Brand */
@@ -173,6 +180,10 @@ body {
     .navbar {
         left: 0;
         width: 100%;
+    }
+    .navbar-brand {
+        font-size: 18px;
+        
     }
 }
 

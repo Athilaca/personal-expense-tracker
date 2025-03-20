@@ -55,18 +55,11 @@ def custom_login(request):
 @login_required
 def dashboard(request):
 
-    category_filter = request.GET.get("category", "All")
 
-    # Get all expenses for the logged-in user
     all_expenses = Expense.objects.filter(user=request.user)
     
     # Calculate total expenses across all categories (for header display)
     total_expenses = all_expenses.aggregate(Sum("amount"))["amount__sum"] or 0
-
-    # Apply category filtering for the table
-    expenses = all_expenses
-    if category_filter != "All":
-        expenses = expenses.filter(category=category_filter)
 
     # Get category-wise summary (for filter display)
     category_summary = all_expenses.values("category").annotate(total=Sum("amount"))
@@ -76,16 +69,14 @@ def dashboard(request):
         request,
         "tracker/dashboard.html",
         {
-            "expenses": expenses,  # Only filtered expenses for table
             "total_expenses": total_expenses,  # Always sum of all expenses
-            "category_summary": category_summary,
-            "selected_category": category_filter,
-            
+            "category_summary": category_summary,  
         },
     )
 
 
 
+@login_required
 def add_edit_expense(request, pk=None):
     if pk:  # If expense_id is provided, fetch the expense for editing
         expense = get_object_or_404(Expense, id=pk, user=request.user)
@@ -113,7 +104,7 @@ def delete_expense(request, pk):
 
     expense = get_object_or_404(Expense, pk=pk, user=request.user)
     expense.delete()
-    return redirect('dashboard')
+    return redirect('expense-list')
 
 @login_required
 def filter_expenses(request):
@@ -140,30 +131,42 @@ def filter_expenses(request):
     categories = [item["category"] for item in category_summary]
     totals = [item["total"] for item in category_summary]
 
-    return JsonResponse({"expenses": expenses_data,"categories": categories,
-            "totals": totals, "months": months,
+    return JsonResponse(
+        {"expenses": expenses_data,
+        "categories": categories,
+        "totals": totals, "months": months,
         "month_totals": month_totals})
 
 
 
+
+@login_required
 def export_expenses(request):
     format_type = request.GET.get("format", "csv")
+    selected_ids = request.GET.getlist("ids")  # Get selected expense IDs
 
-    # Get all expenses for the logged-in user
-    expenses = Expense.objects.filter(user=request.user).values("title", "amount", "category", "date")
+    # Filter expenses based on selected IDs, or return all if none selected
+    expenses = Expense.objects.filter(user=request.user)
+    if selected_ids:
+        expenses = expenses.filter(id__in=selected_ids)
+
+    expenses = expenses.values("title", "amount", "category", "date")
 
     # Calculate total expenses
     total_expenses = sum(expense["amount"] for expense in expenses)
 
-    if format_type == "excel":
+    if format_type == "xlsx":
         df = pd.DataFrame(expenses)
         df.loc[len(df)] = ["Total", total_expenses, "All Categories", ""]  # Add Total Row
-        response = HttpResponse(content_type="application/vnd.ms-excel")
+
+        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         response["Content-Disposition"] = 'attachment; filename="expenses.xlsx"'
-        df.to_excel(response, index=False)
+
+        with pd.ExcelWriter(response, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="Expenses")
+
         return response
 
-    # Default to CSV
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="expenses.csv"'
     writer = csv.writer(response)
@@ -173,13 +176,26 @@ def export_expenses(request):
     writer.writerow(["Total", total_expenses])  # Add Total Row
     return response
 
+
+
 @login_required
 def custom_logout(request):
     logout(request)
     return redirect('login')
 
+
+
 @login_required
-def expenses(request):
+def expense_list(request):
+    selected_category = request.GET.get("category", "All")  
     expenses = Expense.objects.filter(user=request.user)  # Filter by logged-in user
     category_summary = expenses.values("category").annotate(total=Sum("amount"))
-    return render(request, "tracker/expense.html", {"expenses": expenses, "category_summary": category_summary,})
+    return render(
+        request, 
+        "tracker/expense_list.html", 
+        {
+         "expenses": expenses, 
+         "category_summary": category_summary,
+         "selected_category": selected_category,
+        }
+    )

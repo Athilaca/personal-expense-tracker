@@ -31,8 +31,13 @@
                     <i class="fa-solid fa-chart-line"></i> Dashboard
                 </a>
         
-                <!-- Export Dropdown -->
-                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#exportSubmenu" aria-expanded="false">
+               
+                <a href="{% url 'expense_list' %}" class="nav-link {% if request.path == '/expense-list/' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Expenses
+                </a>
+
+                 <!-- Export Dropdown -->
+                 <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#exportSubmenu" aria-expanded="false">
                     <i class="fa-solid fa-file-export"></i> Export
                 </a>
         
@@ -46,9 +51,6 @@
                     </a>
                 </div>
         
-                <a href="{% url 'expenses' %}" class="nav-link {% if request.path == '/expenses/' %}active{% endif %}">
-                    <i class="fa-solid fa-chart-line"></i> Expenses
-                </a>
         
                 <a href="{% url 'logout' %}" class="nav-link text-danger">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -70,12 +72,8 @@
                     </button>
                     
                     <a class="navbar-brand" href="{% url 'dashboard' %}">
-                        📊 Expense Tracker
+                        📊 Personal Expense Tracker
                     </a>
-
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
 
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav ms-auto align-items-center">
